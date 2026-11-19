@@ -1,0 +1,2 @@
+treatment_revpairwise,warming_season_revpairwise,estimate,SE,df,asymp.LCL,asymp.UCL,z.ratio,p.value
+shallow - deep,2026 warming - 2025 warming,-2.1357267521933956,0.3454064625090836,Inf,-2.8127109787385836,-1.4587425256482076,-6.183227542064966,6.280408517923743e-10

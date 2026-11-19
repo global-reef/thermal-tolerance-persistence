@@ -1,0 +1,9 @@
+genus,treatment,previous_bleached,transitions,changed,proportion,transition
+ACRO,deep,0,1406,93,0.06614509246088193,New substantial bleaching
+ACRO,deep,1,343,147,0.42857142857142855,Recovery below threshold
+ACRO,shallow,0,1421,49,0.034482758620689655,New substantial bleaching
+ACRO,shallow,1,109,65,0.5963302752293578,Recovery below threshold
+POR,deep,0,343,11,0.03206997084548105,New substantial bleaching
+POR,deep,1,23,13,0.5652173913043478,Recovery below threshold
+POR,shallow,0,379,13,0.03430079155672823,New substantial bleaching
+POR,shallow,1,36,20,0.5555555555555556,Recovery below threshold

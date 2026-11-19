@@ -1,0 +1,2 @@
+treatment_revpairwise,period_revpairwise,estimate,SE,df,asymp.LCL,asymp.UCL,z.ratio,p.value
+shallow - deep,Second monitoring period - First monitoring period,-2.245145673143098,0.24731450470698263,Inf,-2.7298731952231456,-1.7604181510630506,-9.07809946611558,1.1048716870430688e-19

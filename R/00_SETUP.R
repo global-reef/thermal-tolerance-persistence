@@ -1,9 +1,11 @@
 
 ### 00. SETUP ####
-
+set.seed(42)
 #### Packages ####
 
 suppressPackageStartupMessages({
+  library(readxl)
+  library(tidyr)
   library(janitor)
   library(lubridate)
   library(glmmTMB)
@@ -13,13 +15,15 @@ suppressPackageStartupMessages({
   library(performance)
   library(emmeans)
   library(tidyverse)
+  library(patchwork)
+  library(terra)
   library(dplyr)
   library(beepr)
 })
 
 #### Analysis date ####
 
-analysis_date <- "2026.11.13" # Update for each new analysis version
+analysis_date <- "2026.11.17" # Update for each new analysis version
 
 #### Directories ####
 
@@ -57,29 +61,50 @@ theme_clean <- theme_minimal(base_family = "sans") +
     plot.background = element_rect(fill = "transparent", colour = NA)
   )
 
+
 #### Colour palettes ####
 
-origin_palette <- c(
-  shallow = "#B9C7B5",
-  deep = "#1F4E6B"
+treatment_palette <- c(
+  shallow = "#E2A76F",
+  deep    = "#1F4E6B"
 )
 
-
-
-# option B 
 condition_palette <- c(
-  H = "#1F4E6B",
-  PBL = "#477F91",
-  FBL = "#7FA9A8",
-  PRK = "#B9C7B5",
-  FRK = "#E8D8B5"
+  "0" = "#1F4E6B",
+  "1" = "#477F91",
+  "2" = "#7FA9A8",
+  "3" = "#B9C7B5",
+  "4" = "#D1C8B5",
+  "5" = "#E8D8B5",
+  "Dead" = "#90766C"
 )
+
+mortality_palette <- c(
+  METH = "#1F4E6B",
+  OG   = "#477F91",
+  DIS  = "#B9C7B5",
+  BLE  = "#E8D8B5",
+  PHY  = "#9B8579",
+  ACC  = "gray70",
+  UKN  = "gray30"
+)
+
+mortality_labels <- c(
+  METH = "Attachment failure",
+  OG   = "Overgrowth",
+  DIS  = "Disease",
+  BLE  = "Bleaching",
+  PHY  = "Physical damage",
+  ACC  = "Acclimation",
+  UKN  = "Unknown"
+)
+
 
 #### Shared helper functions ####
 
 
 ## citations 
-packages <- c("mclogit", "emmeans", "vegan", "ggalluvial", "tidyverse", "DHARMa", "vegan", "glmmTMB")
+packages <- c("mclogit", "emmeans", "vegan", "ggalluvial", "tidyverse", "DHARMa", "vegan", "glmmTMB", "terra")
 
 for (pkg in packages) {
   cat("\n\n###", pkg, "###\n")
