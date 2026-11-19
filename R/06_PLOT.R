@@ -108,13 +108,16 @@ f2_temperature <- temp_daily %>%
   scale_y_continuous(breaks = 27:33) +
   labs(x = "Month", y = "Temperature (°C)") +
   theme_clean +
-  theme(strip.text = element_text(size = 9), axis.text = element_text(size = 8),
-        plot.margin = margin(5, 5, 5, 75))
+  theme(
+    strip.text = element_text(size = 9),
+    axis.text = element_text(size = 8),
+    plot.margin = margin(5, 5, 5, 5)
+  )
 
 #### C. Assemble and export ####
 
 fig2 <- (f2_heatmap / f2_temperature) +
-  patchwork::plot_layout(heights = c(1.1, 1)) +
+  patchwork::plot_layout(heights = c(1.1, 1), axes = "collect") +
   patchwork::plot_annotation(
     tag_levels = "a", tag_prefix = "(", tag_suffix = ")",
     theme = theme(plot.tag = element_text(face = "bold", size = 11))
@@ -630,4 +633,6 @@ print(fig3)
 print(fig4)
 print(fig5)
 print(figS1)
+
+cat("\n=== PLOTS COMPLETE: 5 FIGURES CREATED AND SAVED TO /PLOTS===\n")
  

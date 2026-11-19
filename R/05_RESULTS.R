@@ -422,9 +422,10 @@ weekly_transition_summary <- weekly_transitions %>%
   )
 
 print(weekly_transition_summary, n = Inf) 
+
 ### 03. SURVIVAL AND MORTALITY RESULTS ####
 
-#### Overall treatment effects ####
+#### A. Overall survival treatment effects ####
 
 survival_overall <- emmeans(
   survival_model, ~ treatment * genus
@@ -432,26 +433,36 @@ survival_overall <- emmeans(
   regrid(transform = "response") %>%
   emmeans(~ treatment, weights = genus_weights)
 
-mortality_overall <- emmeans(
-  mortality_other_model, ~ treatment * genus
-) %>%
-  regrid(transform = "response") %>%
-  emmeans(~ treatment, weights = genus_weights)
-
+summary(survival_overall, infer = TRUE)
 summary(pairs(survival_overall, reverse = TRUE), infer = TRUE)
-summary(pairs(mortality_overall, reverse = TRUE), infer = TRUE)
 
-#### Genus-specific treatment effects ####
+
+#### B. Genus-specific survival treatment effects ####
 
 summary(
   pairs(emmeans(survival_model, ~ treatment | genus), reverse = TRUE),
   type = "response", infer = TRUE
 )
 
-summary(
-  pairs(emmeans(mortality_other_model, ~ treatment | genus), reverse = TRUE),
-  type = "response", infer = TRUE
-)
+
+#### C. Exploratory cause-specific mortality effects ####
+
+# Genus-standardised probability differences, shallow minus deep.
+# Holm adjustment accounts for the two exploratory comparisons.
+cause_contrasts <- purrr::imap_dfr(
+  list(Bleaching = bleaching_death_model, Disease = disease_death_model),
+  ~ emmeans(.x, ~ treatment * genus) %>%
+    regrid(transform = "response") %>%
+    emmeans(~ treatment, weights = genus_weights) %>%
+    pairs(reverse = TRUE) %>%
+    summary(infer = TRUE) %>%
+    as_tibble() %>%
+    mutate(cause = .y, .before = 1)
+) %>%
+  mutate(p_holm = p.adjust(p.value, method = "holm"))
+
+print(cause_contrasts, width = Inf)
+
 
 
 

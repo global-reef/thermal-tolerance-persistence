@@ -186,13 +186,13 @@ rm(bleach_weekly_quadratic, bleach_weekly_gamm, weekly_linear_res)
 
 
 
+
 ### 03. SURVIVAL AND MORTALITY ####
+
 #### A. Primary model: overall survival GLMM ####
 
-# Tests survival probability at day 504 by treatment and genus.
+# Survival at day 504, including complete mortality from all causes.
 # Frame random intercept accounts for clustering of transplanted corals.
-# Unlike Cox regression, this model does not require proportional hazards
-# Because Cox Assumption of proportional hazard was violated)
 survival_model <- glmmTMB(
   survived ~ treatment * genus + (1 | frame),
   family = binomial,
@@ -202,37 +202,30 @@ survival_model <- glmmTMB(
 summary(survival_model)
 
 
-#### B. Secondary model: non-attachment mortality GLMM ####
+#### B. Exploratory models: cause-specific mortality ####
 
-# Tests cumulative mortality from all causes except attachment failure.
-# Attachment deaths remain in the denominator as competing outcomes.
-# This estimates observed mortality risk, not cause-specific hazards.
-mortality_other_model <- glmmTMB(
-  other_mortality ~ treatment * genus + (1 | frame),
+# Post hoc comparisons motivated by observed mortality cause distributions.
+# All 800 corals are retained; deaths from other causes are competing outcomes.
+# These models estimate cumulative cause-specific mortality probability,
+# not cause-specific hazards.
+
+bleaching_death_model <- glmmTMB(
+  as.integer(event == 1 & death_cause == "BLE") ~ treatment + genus + (1 | frame),
   family = binomial,
   data = survival_data
 )
 
-summary(mortality_other_model)
+disease_death_model <- glmmTMB(
+  as.integer(event == 1 & death_cause == "DIS") ~ treatment + genus + (1 | frame),
+  family = binomial,
+  data = survival_data
+)
+
+summary(bleaching_death_model)
+summary(disease_death_model)
 
 
 #### C. Descriptive survival and mortality analyses ####
-
-##### Restricted mean survival time ####
-
-# All surviving corals were observed at day 504, so RMST equals
-# mean recorded survival duration capped at 504 days.
-# Death dates reflect first detection rather than exact mortality timing.
-rmst_group <- survival_data %>%
-  group_by(treatment, genus) %>%
-  summarise(
-    corals = n(),
-    deaths = sum(event),
-    rmst_days = mean(survival_days),
-    .groups = "drop"
-  )
-
-print(rmst_group)
 
 ##### Kaplan–Meier survival estimates ####
 
@@ -245,7 +238,7 @@ summary(survival_km, times = c(180, 365, 504))
 
 ##### Mortality cause distribution ####
 
-# Each percentage uses all originally transplanted corals in its group.
+# Percentages use all originally transplanted corals in each group.
 mortality_causes <- survival_data %>%
   count(treatment, genus, death_cause, name = "corals") %>%
   group_by(treatment, genus) %>%
@@ -256,8 +249,7 @@ print(mortality_causes, n = Inf)
 
 ##### Cause-specific cumulative incidence ####
 
-# Attachment and non-attachment mortality are competing events.
-# Aalen–Johansen estimates their cumulative incidence over time.
+# Aalen–Johansen estimates account for competing mortality causes.
 survival_cif <- survival::survfit(
   survival::Surv(survival_days, cause_group) ~ treatment + genus,
   data = survival_data
@@ -270,8 +262,8 @@ summary(survival_cif, times = c(180, 365, 504))
 
 ##### Cox proportional hazards assessment ####
 
-# Conventional Cox regression was evaluated but not selected:
-# proportional hazards were violated (global p = 0.00023).
+# Cox regression was evaluated but not selected because the
+# proportional hazards assumption was violated (global p = 0.00023).
 survival_cox <- survival::coxph(
   survival::Surv(survival_days, event) ~ treatment * genus + cluster(frame),
   data = survival_data,
@@ -279,14 +271,14 @@ survival_cox <- survival::coxph(
   x = TRUE
 )
 
-survival_ph <- survival::cox.zph(survival_cox)
-print(survival_ph)
+print(survival::cox.zph(survival_cox))
 
 ##### Binomial GLMM diagnostics ####
 
 survival_models <- list(
   "Overall survival" = survival_model,
-  "Non-attachment mortality" = mortality_other_model
+  "Bleaching-related mortality" = bleaching_death_model,
+  "Disease-related mortality" = disease_death_model
 )
 
 for (model_name in names(survival_models)) {
@@ -305,9 +297,7 @@ for (model_name in names(survival_models)) {
   print(DHARMa::testOutliers(simulated_res))
 }
 
-rm(survival_models, model_name, model, simulated_res,
-   survival_cox, survival_ph)
-
+rm(survival_models, model_name, model, simulated_res, survival_cox)
 
 #### E. Save model outputs ####
 
