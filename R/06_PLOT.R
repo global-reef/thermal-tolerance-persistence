@@ -83,7 +83,7 @@ f2_heatmap <- bleach_warming %>%
 
 #### B. Local temperature during warming periods ####
 
-# Restrict to complete days and preserve gaps in logger coverage.
+# Preserve incomplete-day gaps and end reference lines at observed coverage.
 f2_temperature <- temp_daily %>%
   filter(lubridate::month(date) %in% 3:7) %>%
   mutate(
@@ -97,13 +97,21 @@ f2_temperature <- temp_daily %>%
               fill = condition_palette[["2"]], alpha = 0.5) +
   geom_line(aes(y = temp_mean), colour = condition_palette[["0"]],
             linewidth = 0.7) +
-  geom_hline(yintercept = c(mmm, mmm + 1),
-             linetype = "dotted", colour = "gray50") +
-  facet_wrap(~ year, nrow = 1) +
+  geom_segment(
+    data = \(x) x %>%
+      group_by(year) %>%
+      summarise(xend = max(day_of_season), .groups = "drop") %>%
+      tidyr::crossing(threshold = c(mmm, mmm + 1)),
+    aes(x = 0, xend = xend, y = threshold, yend = threshold),
+    inherit.aes = FALSE, linetype = "dotted", colour = "gray50"
+  ) +
+  facet_wrap(~year, nrow = 1) +
   scale_x_continuous(
-    breaks = as.numeric(as.Date(paste0("2025-", sprintf("%02d", 3:7), "-01")) -
+    breaks = as.numeric(as.Date(paste0("2025-", sprintf("%02d", 3:7), "-15")) -
                           as.Date("2025-03-01")),
-    labels = month.abb[3:7]
+    labels = month.abb[3:7],
+    limits = c(0, 153),
+    expand = expansion(mult = 0)
   ) +
   scale_y_continuous(breaks = 27:33) +
   labs(x = "Month", y = "Temperature (°C)") +
@@ -635,4 +643,34 @@ print(fig5)
 print(figS1)
 
 cat("\n=== PLOTS COMPLETE: 5 FIGURES CREATED AND SAVED TO /PLOTS===\n")
+
+
+
+
+
+### FIG 1 
+### 01. STUDY SITE MAP ####
+library(sf)
+library(ggplot2)
+library(ggspatial)
+library(prettymapr)
+
+sites <- tibble::tribble(
+  ~site,             ~lat,        ~lon,
+  "Shallow donor",    10.0637439,  99.8229428,
+  "Deep donor",       10.0639909,  99.8243499,
+  "Transplant site",  10.0629401,  99.8241716
+)
+
+sites_sf <- sf::st_as_sf(sites, coords = c("lon", "lat"), crs = 4326)
+
+ggplot() +
+  annotation_map_tile(type = "cartolight", zoom = 14, progress = "none") +
+  geom_sf(data = sites_sf, aes(shape = site), size = 3, colour = "black") +
+  scale_shape_manual(values = c(16, 17, 15)) +
+  coord_sf(xlim = c(99.815, 99.845), ylim = c(10.05, 10.08),
+           expand = FALSE) +
+  annotation_scale(location = "br", width_hint = 0.25) +
+  theme_void() +
+  theme(legend.position = "bottom")
  

@@ -532,6 +532,22 @@ temp_daily %>%
   labs(x = "Date", y = "Daily mean temperature (°C)") +
   theme_clean
 
+#### Investigating peaks ####
+temp_daily %>%
+  filter(complete_day, temp_mean >= 31) %>%
+  select(date, temp_mean) %>%
+  arrange(date) %>%
+  print(n = Inf)
+
+#### max readout #### 
+temp_daily %>%
+  filter(complete_day) %>%
+  group_by(year = lubridate::year(date)) %>%
+  summarise(
+    max_daily_mean = max(temp_mean),
+    max_recorded_temp = max(temp_max),
+    .groups = "drop"
+  )
 #### Growth interval temperature ####
 
 # Descriptive only; no temperature-growth model selected.

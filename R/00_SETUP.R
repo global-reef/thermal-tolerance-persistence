@@ -110,3 +110,5 @@ for (pkg in packages) {
   cat("\n\n###", pkg, "###\n")
   print(citation(pkg))
 }
+
+sessionInfo()
